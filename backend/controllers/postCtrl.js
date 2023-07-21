@@ -4,12 +4,12 @@ const jsonwebtoken = require("jsonwebtoken");
 
 exports.deletePost = async (req, res) => {
   try {
-    const uuid = req.params.id;
+    const postId = req.params.id;
 
-    if (!uuid) {
+    if (!postId) {
       return res.status(404).json({ error: "L'id du post n'a pas été trouvé" })
     }
-    const post = await postService.deletePost(uuid)
+    const post = await postService.deletePost(postId);
 
     res.status(200).json(post);
   } catch (e) {
@@ -22,8 +22,9 @@ exports.deletePost = async (req, res) => {
 
 exports.getUserPost = async (req, res) => {
   try {
-    console.log(req.user)
-    const userId = req.user.uuid;
+    console.log("req.user.userId")
+    console.log(req.user._id)
+    const userId = req.user._id;
     const posts = await postService.getPostsByUserId(userId);
     res.status(200).json(posts);
   } catch (error) {
@@ -34,10 +35,11 @@ exports.getUserPost = async (req, res) => {
 
 exports.editPost = async (req, res) => {
   try {
-    const uuid = req.params.id;
+    const postId = req.params.id;
+    const userId = req.user._id;
     const { label, content } = req.body;
 
-    const post = await postService.getPostByUuidAndUserId(uuid, userId);
+    const post = await postService.getPostByIdAndUserId(postId, userId);
 
     if (!post) {
       return res.status(404).json({ message: 'Post non trouvé' });
@@ -59,9 +61,9 @@ exports.editPost = async (req, res) => {
 exports.getAllPost = async (req, res) => {
   try {
 
-    const post = await postService.getAllPost()
+    const posts = await postService.getAllPost();
 
-    res.status(200).json(post);
+    res.status(200).json(posts);
   } catch (e) {
     console.error(e)
     res.status(500).json({ e });
@@ -71,14 +73,14 @@ exports.getAllPost = async (req, res) => {
 
 exports.getPostByUuidAndUserId = async (req, res) => {
   try {
-    const uuid = req.params.id
-    const userId = req.user.uuid;
+    const postId = req.params.id;
+    const userId = req.user.userId;
 
-    if (!uuid) {
+    if (!postId) {
       throw new Error("GET_USER :: Paramètres incorrects")
     }
 
-    const post = await postService.getPostByUuidAndUserId(uuid, userId)
+    const post = await postService.getPostByUuidAndUserId(postId, userId);
 
     console.log(post)
     const data = {
@@ -101,27 +103,34 @@ exports.getPostByUuidAndUserId = async (req, res) => {
   }
 }
 
-exports.getPostByUuid = async (req, res) => {
+exports.getPostById = async (req, res) => {
   try {
-    const uuid = req.params.id
+    const postId = req.params.id;
 
-    if (!uuid) {
+    if (!postId) {
       throw new Error("GET_USER :: Paramètres incorrects")
     }
 
-    const post = await postService.getPostById(uuid)
+    const post = await postService.getPostById(postId);
 
-    console.log("post")
-    console.log(post)
     const data = {
       uuid: post.uuid,
       label: post.label,
       content: post.content,
       like: post.like,
-      comments: post.comments,
+      comments: post.comments.map(comment => ({
+        _id: comment._id,
+        content: comment.content,
+        like: comment.like,
+        createdDate: comment.createdDate,
+        userId: {
+          _id: comment.userId._id,
+          fullname: comment.userId.fullname
+        }
+      })),
       createdDate: post.createdDate,
       userId: {
-        uuid: post.userId.uuid,
+        uuid: post.userId._id,
         fullname: post.userId.fullname
       }
     }
@@ -133,11 +142,13 @@ exports.getPostByUuid = async (req, res) => {
   }
 }
 
+
+
 exports.createPost = async (req, res) => {
   try {
     const { label, content, jwt } = req.body;
     const decodedToken = jsonwebtoken.verify(jwt, authService.JWT_SECRET);
-    const userId = decodedToken.data.uuid;
+    const userId = decodedToken.data.userId;
     const comments = []
 
     if (!label || !content || !userId) {
@@ -159,4 +170,3 @@ exports.createPost = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la création du post' });
   }
 };
-

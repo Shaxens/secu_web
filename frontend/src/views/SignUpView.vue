@@ -32,22 +32,26 @@ export default {
   },
   methods: {
     async signUp() {
+      // On extrait le prénom à partir de l'adresse e-mail
+      const atIndex = this.username.indexOf("@");
+      const firstname = atIndex !== -1 ? this.username.substring(0, atIndex) : "";
+
       const params = {
         username: this.username,
         password: this.password,
-        firstname: "",
+        firstname: firstname,
         lastname: ""
-      }
+      };
+
       try {
         return await axios.post('/signUp', params).then(() => {
           this.$router.push({ path: "/signin" }).then(() => {
-            this.$router.go()
-          })
-        })
+            this.$router.go();
+          });
+        });
       } catch (e) {
-        throw Error(`Cannot create new account : ${e}`)
+        throw Error(`Cannot create new account : ${e}`);
       }
-
     }
   }
 }

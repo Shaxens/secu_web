@@ -23,7 +23,7 @@
 
           <div class="w-100 justify-content-end d-flex">
             <button class="btn btn-primary me-2 mt-2" @click="createPost">Confirmer</button>
-            <button class="btn btn-secondary mt-2" @click="cancelPost">Annuler</button>
+            <router-link to="/mypost" class="btn btn-secondary mt-2">Annuler</router-link>
           </div>
         </div>
       </div>
@@ -53,21 +53,13 @@ export default {
           jwt
         }
 
-        return await axios.post('/createPost', params)
-          .then(response => {
-            console.log('Post créé :', response.data);
-            this.$router.push({ path: '/mypost' });
-          })
-          .catch(error => {
-            console.error('Erreur lors de la création du post :', error);
-          });
+        const response = await axios.post('/createPost', params);
+        console.log('Post créé :', response.data);
+        this.$router.push({ path: '/mypost' });
       } catch (e) {
         console.error(`Error Create Post : ${e}`)
         throw Error(`Error : impossible de créer un nouveau post ${e}`)
       }
-    },
-    cancelPost() {
-      this.$router.push({ path: '/mypost' });
     }
   }
 }

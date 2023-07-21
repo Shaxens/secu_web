@@ -31,7 +31,7 @@ app.put('/updateUser', isUserLogged, userCtrl.updateUser);
 app.post('/createPost', isUserLogged, postCtrl.createPost);
 app.get('/getAllPost', isUserLogged, postCtrl.getAllPost);
 app.get('/getUserPost', isUserLogged, postCtrl.getUserPost);
-app.get('/getPost/:id', isUserLogged, postCtrl.getPostByUuid);
+app.get('/getPost/:id', isUserLogged, postCtrl.getPostById);
 app.put('/editPost/:id', isUserLogged, postCtrl.editPost);
 app.delete('/deletePost/:id', isUserLogged, postCtrl.deletePost);
 

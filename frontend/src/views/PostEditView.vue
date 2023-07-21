@@ -20,7 +20,7 @@
           </div>
           <div class="w-100 justify-content-end d-flex">
             <button class="btn btn-success me-2 mt-2" @click="editPost">Confirmer</button>
-            <button class="btn btn-outline-secondary mt-2" @click="cancelPost">Annuler</button>
+            <router-link to="/mypost" class="btn btn-outline-secondary mt-2">Annuler</router-link>
           </div>
         </div>
       </div>
@@ -66,9 +66,6 @@ export default {
       } catch (error) {
         console.error('Erreur lors de la mise à jour du post :', error);
       }
-    },
-    cancelPost() {
-      this.$router.push({ path: `/mypost` });
     }
   }
 }

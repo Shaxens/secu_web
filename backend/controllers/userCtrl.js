@@ -5,10 +5,9 @@ const jsonwebtoken = require("jsonwebtoken");
 exports.updateUser = async (req, res) => {
   try {
     const { firstname, lastname, bio } = req.body;
-    console.log("req.body")
-    console.log(req.body)
-    const userId = req.user.uuid;
-
+    console.log("req.body");
+    console.log(req.body);
+    const userId = req.user._id;
     const user = await userService.getUserById(userId);
 
     if (!user) {
@@ -31,71 +30,69 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-
 exports.getUser = async (req, res) => {
   try {
     const token = req.body.jwt;
-    const decodedToken = jsonwebtoken.verify(token, authService.JWT_SECRET)
-    const uuid = decodedToken.data.uuid;
+    const decodedToken = jsonwebtoken.verify(token, authService.JWT_SECRET);
+    const userId = decodedToken.data.userId;
 
-    if (!uuid) {
-      throw new Error("GET_USER :: Paramètres incorrects")
+    if (!userId) {
+      throw new Error("GET_USER :: Paramètres incorrects");
     }
 
-    const user = await userService.getUserById(uuid)
+    const user = await userService.getUserById(userId);
 
     const data = {
-      uuid: user.uuid,
+      userId: user._id,
       username: user.username,
       firstname: user.firstname,
       lastname: user.lastname,
       fullname: user.fullname,
       bio: user.bio
-    }
+    };
 
-    // await authService.createToken(data)
-    res.status(200).json(JSON.stringify(data));
+    res.status(200).json(data);
   } catch (e) {
-    console.error(e)
+    console.error(e);
     res.status(500).json({ e });
   }
-}
+};
 
 exports.signIn = async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log(req.body)
+    console.log(req.body);
     if (!username || !password) {
-      throw new Error("Paramètres incorrects")
+      throw new Error("Paramètres incorrects");
     }
 
-    let token = await authService.signIn(username, password)
+    let token = await authService.signIn(username, password);
     if (token) {
-      res.status(200).send(token)
+      res.status(200).send(token);
     } else {
-      return res.status(401).send("NOT AUTHORIZED")
+      return res.status(401).send("NOT AUTHORIZED");
     }
   } catch (e) {
-    console.error(e)
-    res.status(500).json;
+    console.error(e);
+    res.status(500).json(e);
   }
-}
+};
 
 exports.signUp = async (req, res) => {
   try {
     const { username, password, firstname, lastname } = req.body;
 
     if (!username || !password || (!username && !password)) {
-      throw new Error("Paramètres incorrects")
+      throw new Error("Paramètres incorrects");
     }
 
-    const user = await userService.getUserByUsername(username)
-    if (user) throw new Error("SIGNUP :: User already exist")
+    const user = await userService.getUserByUsername(username);
+    if (user) throw new Error("SIGNUP :: User already exist");
 
-    await authService.signUp(username, password, firstname, lastname)
-    res.status(200).send("Sign Up !")
+    await authService.signUp(username, password, firstname, lastname);
+    res.status(200).send("Sign Up !");
   } catch (e) {
-    console.error(e)
-    res.status(500).json;
+    console.error(e);
+    res.status(500).json(e);
   }
-}
+};

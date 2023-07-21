@@ -19,13 +19,13 @@
               <div class="form-group">
                 <div class="col">
                   <label for="content">Votre commentaire</label>
-                  <textarea class="form-control" id="content" rows="3" v-model="post.comments"></textarea>
+                  <textarea class="form-control" id="content" rows="3" v-model="commentContent"></textarea>
                 </div>
               </div>
               <div class="w-100 justify-content-end d-flex mt-2">
-                <router-link :to="`/`" @click="createComments()" class="btn btn-outline-success">
+                <button class="btn btn-outline-success" @click="createComments()">
                   Ajouter le commentaire
-                </router-link>
+                </button>
                 <router-link :to="`/`" class="btn btn-outline-primary ms-2">
                   Annuler
                 </router-link>
@@ -51,7 +51,8 @@ export default {
           fullname: ""
         },
         comments: []
-      }
+      },
+      commentContent: ""
     }
   },
   async beforeMount() {
@@ -63,7 +64,8 @@ export default {
         content: response.data.content,
         userId: {
           fullname: response.data.userId.fullname
-        }
+        },
+        comments: response.data.comments
       }
     } catch (e) {
       console.error('Erreur lors de la récupération des données du post :', e);
@@ -75,9 +77,13 @@ export default {
       try {
         const postId = this.$route.params.id;
         const params = {
-          content: this.post.comments
+          content: this.commentContent
         };
         const response = await axios.post(`/createComments/${postId}`, params);
+        this.post.comments.push(response.data);
+        this.commentContent = "";
+
+        this.$router.push({ path: '/' });
       } catch (e) {
         console.error(`Erreur lors de la création du commentaire : ${e}`);
         throw Error(`Error : ${e}`);

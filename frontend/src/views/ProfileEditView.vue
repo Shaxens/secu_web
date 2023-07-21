@@ -26,14 +26,13 @@
               <textarea class="form-control" id="bio" rows="3" v-model="user.bio"></textarea>
             </div>
             <button class="btn btn-primary" @click="saveProfile">Save</button>
-            <button class="btn btn-secondary" @click="cancelProfile">Cancel</button>
+            <router-link to="/profile" class="btn btn-secondary">Cancel</router-link>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-
 
 <script>
 import axios from 'axios'
@@ -48,7 +47,7 @@ export default {
     try {
       const jwt = localStorage.getItem("jwt");
       const response = await axios.post('/getUser', { jwt })
-      this.user = JSON.parse(response.data);
+      this.user = response.data;
       return response
     } catch (e) {
       console.error(e)
@@ -79,9 +78,6 @@ export default {
         .catch(error => {
           console.error('Erreur lors de la mise à jour du profil :', error);
         });
-    },
-    cancelProfile() {
-      this.$router.push({ path: '/profile' });
     }
   }
 }

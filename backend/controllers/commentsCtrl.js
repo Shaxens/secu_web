@@ -5,17 +5,17 @@ const jsonwebtoken = require("jsonwebtoken");
 
 exports.deleteComments = async (req, res) => {
   try {
-    const uuid = req.params.id;
+    const commentId = req.params.id;
 
-    if (!uuid) {
-      return res.status(404).json({ error: "L'id du post n'a pas été trouvé" })
+    if (!commentId) {
+      return res.status(404).json({ error: "L'id du commentaire n'a pas été trouvé" })
     }
-    const post = await postService.deleteComments(uuid)
+    const comment = await commentsService.deleteComments(commentId);
 
-    res.status(200).json(post);
+    res.status(200).json(comment);
   } catch (e) {
-    console.error(`Erreur lors de la suppression du post : ${e}`)
-    res.status(500).json({ message: `Erreur lors de la suppresion du post ${e}` })
+    console.error(`Erreur lors de la suppression du commentaire : ${e}`)
+    res.status(500).json({ message: `Erreur lors de la suppression du commentaire ${e}` })
   }
 
 }
@@ -23,36 +23,35 @@ exports.deleteComments = async (req, res) => {
 
 exports.getUserComments = async (req, res) => {
   try {
-    console.log(req.user)
-    const userId = req.user.uuid;
-    const posts = await postService.getCommentssByUserId(userId);
-    res.status(200).json(posts);
+    const userId = req.user.userId;
+    const comments = await commentsService.getCommentsByUserId(userId);
+    res.status(200).json(comments);
   } catch (error) {
-    console.error('Erreur lors de la récupération des posts de l\'utilisateur :', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération des posts de l\'utilisateur' });
+    console.error('Erreur lors de la récupération des commentaires de l\'utilisateur :', error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des commentaires de l\'utilisateur' });
   }
 }
 
 exports.editComments = async (req, res) => {
   try {
-    const uuid = req.params.id;
+    const commentId = req.params.id;
     const { label, content } = req.body;
 
-    const post = await postService.getCommentsByUuidAndUserId(uuid, userId);
+    const comment = await commentsService.getCommentsByUuidAndUserId(commentId, userId);
 
-    if (!post) {
-      return res.status(404).json({ message: 'Comments non trouvé' });
+    if (!comment) {
+      return res.status(404).json({ message: 'Commentaires non trouvé' });
     }
 
-    post.label = label;
-    post.content = content;
+    comment.label = label;
+    comment.content = content;
 
-    const updatedComments = await post.save();
+    const updatedComments = await comment.save();
 
-    res.json({ message: 'Comments mis à jour avec succès', post: updatedComments });
+    res.json({ message: 'Commentaires mis à jour avec succès', comment: updatedComments });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du post :', error);
-    res.status(500).json({ message: 'Erreur lors de la mise à jour du post' });
+    console.error('Erreur lors de la mise à jour des commentaires :', error);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour des commentaires' });
   }
 
 };
@@ -60,9 +59,9 @@ exports.editComments = async (req, res) => {
 exports.getAllComments = async (req, res) => {
   try {
 
-    const post = await postService.getAllComments()
+    const comments = await commentsService.getAllComments();
 
-    res.status(200).json(post);
+    res.status(200).json(comments);
   } catch (e) {
     console.error(e)
     res.status(500).json({ e });
@@ -71,26 +70,26 @@ exports.getAllComments = async (req, res) => {
 
 exports.getComments = async (req, res) => {
   try {
-    const uuid = req.params.id
-    const userId = req.user.uuid;
+    const commentId = req.params.id;
+    const userId = req.user.userId;
 
-    if (!uuid) {
-      throw new Error("GET_USER :: Paramètres incorrects")
+    if (!commentId) {
+      throw new Error("GET_COMMENTS :: Paramètres incorrects")
     }
 
-    const post = await postService.getCommentsByUuidAndUserId(uuid, userId)
+    const comment = await commentsService.getCommentsByUuidAndUserId(commentId, userId);
 
-    console.log(post)
+    console.log(comment)
     const data = {
-      uuid: post.uuid,
-      label: post.label,
-      content: post.content,
-      like: post.like,
-      comments: post.comments,
-      createdDate: post.createdDate,
+      uuid: comment.uuid,
+      label: comment.label,
+      content: comment.content,
+      like: comment.like,
+      comments: comment.comments,
+      createdDate: comment.createdDate,
       userId: {
         uuid: userId,
-        fullname: post.userId.fullname
+        fullname: comment.userId.fullname
       }
     }
 
@@ -104,25 +103,22 @@ exports.getComments = async (req, res) => {
 exports.createComments = async (req, res) => {
   try {
     const { content } = req.body;
+    console.log("content : " + req.body)
     const postId = req.params.id;
-    const userId = req.user.uuid;
+    const userId = req.user._id;
 
     if (!content || !userId) {
-      console.error('CREATECOMMENTS ERROR: Paramètres incorrects, impossible de créer le commentaire');
+      console.error('CREATE_COMMENTS ERROR: Paramètres incorrects, impossible de créer le commentaire');
       res.status(400).send('Paramètres incorrects');
       return;
     }
 
     const comment = await commentsService.createComments(content, userId);
-    console.log("comment.response");
-    console.log(comment);
 
     const post = await postService.getPostById(postId);
-    console.log(post);
-    console.log("post.comments");
-    console.log(post.comments);
+
     if (!post) {
-      console.error('CREATECOMMENTS ERROR: Post non trouvé');
+      console.error('CREATE_COMMENTS ERROR: Post non trouvé');
       res.status(404).json({ message: 'Post non trouvé' });
       return;
     }
@@ -130,11 +126,9 @@ exports.createComments = async (req, res) => {
     post.comments.push(comment._id);
 
     await post.save();
-    res.status(200).send('Comment successfully created!');
+    res.status(200).send('Commentaire créé avec succès!');
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Erreur lors de la création du commentaire' });
   }
 };
-
-

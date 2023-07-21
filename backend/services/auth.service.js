@@ -8,11 +8,11 @@ const JWT_SECRET = "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 exports.JWT_SECRET = "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 
 function hashPassword(plainTextPassword) {
-  return bcrypt.hash(plainTextPassword, SALT_ROUNDS)
+  return bcrypt.hash(plainTextPassword, SALT_ROUNDS);
 }
 
 function comparePassword(plainTextPassword, hash) {
-  return bcrypt.compare(plainTextPassword, hash)
+  return bcrypt.compare(plainTextPassword, hash);
 }
 
 function createToken(data) {
@@ -23,20 +23,27 @@ function createToken(data) {
 
 exports.signIn = async (username, password) => {
   const dbUser = await userService.getUserByUsername(username);
-  const dbPassword = await comparePassword(password, dbUser.password)
+  if (!dbUser) {
+    console.error("ERROR SIGNING IN :: User not found");
+    return null;
+  }
+
+  const dbPassword = await comparePassword(password, dbUser.password);
 
   if (dbPassword) {
     const user = {
       username: dbUser.username,
-      uuid: dbUser.uuid
-    }
+      userId: dbUser._id.toString()
+    };
 
-    return createToken(user)
+    return createToken(user);
   } else {
-    console.error("ERROR SIGNING IN :: Cannot create the token")
+    console.error("ERROR SIGNING IN :: Invalid password");
+    return null;
   }
-}
+};
 
 exports.signUp = async (username, password, firstname, lastname) => {
-  return userService.createUser({ username, password: await hashPassword(password), firstname, lastname });
+  const hashedPassword = await hashPassword(password);
+  return userService.createUser({ username, password: hashedPassword, firstname, lastname });
 };

@@ -11,7 +11,8 @@ exports.isUserLogged = async (req, res, next) => {
           console.log(err)
           return res.status(401).json("NOT AUTHORIZED 1")
         } else {
-          req.user = await userService.getUserById(decode.data.uuid)
+          const userId = decode.data.userId;
+          req.user = await userService.getUserById(userId);
           next();
         }
       })

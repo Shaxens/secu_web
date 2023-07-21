@@ -9,17 +9,20 @@
       </div>
     </div>
 
+    <div v-if="posts.length === 0" class="text-center">
+      <h4>Aucun utilisateur n'a encore créé de post.</h4>
+    </div>
 
     <div class="row mb-5" data-masonry='{"percentPosition": true }'>
       <div class="col-6">
-        <div class="card border-primary mb-4" v-for="(post, index) in leftFilteredPosts" :key="post.uuid">
+        <div class="card border-primary mb-4" v-for="(post, index) in leftFilteredPosts" :key="post._id">
           <div class="card-body">
             <div class="card-title">
               <h2>{{ post.label }}</h2>
             </div>
             <p>{{ post.content }}</p>
             <div class="w-100 justify-content-end d-flex">
-              <router-link :to="`/viewPost/${post.uuid}`" class="btn btn-outline-primary ms-2">
+              <router-link :to="`/viewPost/${post._id}`" class="btn btn-outline-primary ms-2">
                 Commenter
               </router-link>
             </div>
@@ -35,7 +38,7 @@
             <div v-if="post.showComments" class="comments">
               <h3>Commentaires :</h3>
               <ul>
-                <li v-for="comment in selectedPost.comments" :key="comment.uuid">
+                <li v-for="comment in post.comments" :key="comment._id">
                   {{ comment.content }} - {{ comment.userId.fullname }}
                 </li>
               </ul>
@@ -45,14 +48,14 @@
       </div>
 
       <div class="col-6">
-        <div class="card border-primary mb-4" v-for="(post, index) in rightFilteredPosts" :key="post.uuid">
+        <div class="card border-primary mb-4" v-for="(post, index) in rightFilteredPosts" :key="post._id">
           <div class="card-body">
             <div class="card-title">
               <h2>{{ post.label }}</h2>
             </div>
             <p>{{ post.content }}</p>
             <div class="w-100 justify-content-end d-flex">
-              <router-link :to="`/viewPost/${post.uuid}`" class="btn btn-outline-primary ms-2">
+              <router-link :to="`/viewPost/${post._id}`" class="btn btn-outline-primary ms-2">
                 Commenter
               </router-link>
             </div>
@@ -68,8 +71,8 @@
             <div v-if="post.showComments" class="comments">
               <h3>Commentaires :</h3>
               <ul>
-                <li v-for="comment in selectedPost.comments" :key="comment.uuid">
-                  {{ comment.content }} - {{ comment.userId && comment.userId.fullname }}
+                <li v-for="comment in post.comments" :key="comment._id">
+                  {{ comment.content }} - {{ comment.userId.fullname }}
                 </li>
               </ul>
             </div>
@@ -105,33 +108,40 @@ export default {
   },
   methods: {
     sortByDateDesc(a, b) {
-      return new Date(b.date) - new Date(a.date);
+      return new Date(b.createdDate) - new Date(a.createdDate);
     },
     async getPost() {
       await axios.get('/')
     },
     async showPostComments(post) {
       try {
-        if (this.selectedPost && this.selectedPost.uuid === post.uuid) {
+        if (this.selectedPost && this.selectedPost._id === post._id) {
           this.toggleComments(post);
         } else {
-          const response = await axios.get(`/getPost/${post.uuid}`);
-          this.selectedPost = response.data;
-          this.posts.forEach(p => (p.showComments = false));
-          post.showComments = true;
+          const response = await axios.get(`/getPost/${post._id}`);
+          const comments = response.data.comments;
+          console.log(response.data);
+          const selectedPostIndex = this.posts.findIndex((p) => p._id === post._id);
+          if (selectedPostIndex !== -1) {
+            this.posts[selectedPostIndex].comments = comments;
+          }
+
+          this.posts.forEach((p) => (p.showComments = false));
+          post.showComments = !post.showComments;
+
+          this.selectedPost = post;
         }
       } catch (e) {
         throw Error(`Cannot get post comments: ${e}`);
       }
     },
+
     toggleComments(post) {
       post.showComments = !post.showComments;
-      if (!post.showComments || (this.selectedPost && this.selectedPost.uuid !== post.uuid)) {
+      if (!post.showComments || (this.selectedPost && this.selectedPost._id !== post._id)) {
         this.selectedPost = null;
       }
     },
-
-
   },
   computed: {
     leftFilteredPosts() {

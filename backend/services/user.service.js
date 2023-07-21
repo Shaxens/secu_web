@@ -1,13 +1,13 @@
 const User = require("../models/User");
 
-exports.getUserById = (uuid) => {
-  return User.findOne({ uuid })
-}
+exports.getUserById = (objectId) => {
+  return User.findOne({ _id: objectId }).exec();
+};
 
 exports.getUserByUsername = (username) => {
-  return User.findOne({ username })
-}
+  return User.findOne({ username }).exec();
+};
 
 exports.createUser = (user) => {
   return User.create({ ...user });
-}
+};

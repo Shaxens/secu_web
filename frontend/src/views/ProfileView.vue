@@ -29,13 +29,15 @@ export default {
   async mounted() {
     try {
       const jwt = localStorage.getItem("jwt");
-      const response = await axios.post('/getUser', { jwt })
-      this.user = JSON.parse(response.data);
-      return response
+      const response = await axios.post('/getUser', { jwt });
+      console.log('Response from API:', response.data);
+      this.user = response.data;
+      return response;
     } catch (e) {
-      console.error(e)
+      console.error('Erreur lors de la récupération des données du profil :', e);
     }
-  },
+  }
+  ,
   methods: {
     editProfile() {
       this.$router.push({ path: '/editProfile' });
